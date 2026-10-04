@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio 212 Esquadrias — plugin de detalhamento para Revit</title>
+<meta name="description" content="Plugin para Revit que detalha e diagrama portas e janelas sozinho: vistas, cotas, tabelas e pranchas no padrão do seu projeto. Teste grátis por 24 horas.">
+<meta property="og:title" content="Studio 212 Esquadrias — detalhamento de portas e janelas no Revit">
+<meta property="og:description" content="Vistas, cotas, tabelas e pranchas de esquadrias geradas a partir do seu modelo. Teste grátis por 24 horas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --vegetal:#ECEEE8;      /* papel manteiga */
+    --folha:#F7F8F4;
+    --tinta:#2E3561;        /* marinho Studio 212 */
+    --grafite:#4C5164;
+    --cota:#A6322B;         /* vermelho de cota */
+    --musgo:#3F5636;
+    --linha:#C9CDC2;
+    --max:1120px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--vegetal);color:var(--grafite);font:400 17px/1.6 "IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--tinta)}
+  :focus-visible{outline:3px solid var(--cota);outline-offset:3px;border-radius:3px}
+  .w{max-width:var(--max);margin:0 auto;padding:0 24px}
+  h1,h2,h3{color:var(--tinta);font-weight:400;margin:0}
+  h1{font-family:"DM Serif Display",Georgia,serif;font-size:clamp(40px,6vw,68px);line-height:1.04;letter-spacing:-.01em}
+  h2{font-family:"DM Serif Display",Georgia,serif;font-size:clamp(30px,4vw,42px);line-height:1.1}
+  h3{font-size:19px;font-weight:600;line-height:1.3}
+  p{margin:0}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+
+  /* topo */
+  header{padding:22px 0}
+  header .w{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .marca{font-family:"DM Serif Display",Georgia,serif;font-size:22px;color:var(--tinta);text-decoration:none}
+  .marca span{font-family:"IBM Plex Sans",sans-serif;font-size:13px;color:var(--grafite);margin-left:8px}
+  header nav a{color:var(--grafite);text-decoration:none;font-size:15px;margin-left:22px}
+  header nav a:hover{color:var(--tinta);text-decoration:underline}
+
+  /* botoes */
+  .btn{display:inline-flex;align-items:center;gap:10px;background:var(--tinta);color:var(--folha);text-decoration:none;font-weight:600;font-size:17px;padding:15px 24px;border-radius:6px;border:0;cursor:pointer}
+  .btn:hover{background:#252b52}
+  .btn svg{width:18px;height:18px}
+  .sub-btn{font-size:14px;color:var(--grafite);margin-top:12px}
+
+  /* hero */
+  .hero{padding:28px 0 72px}
+  .hero .w{display:grid;grid-template-columns:1fr 1.05fr;gap:56px;align-items:center}
+  .hero p.lead{font-size:20px;line-height:1.55;margin:22px 0 32px;max-width:30em}
+  .prancha{margin:0;background:var(--folha);border:1px solid var(--linha);border-radius:4px;padding:18px;position:relative}
+  .prancha svg{display:block;width:100%;height:auto}
+  .prancha figcaption{display:flex;justify-content:space-between;border-top:1px solid var(--linha);margin-top:10px;padding-top:10px;font:500 12px/1.4 "IBM Plex Mono",monospace;color:var(--grafite)}
+  .tr{stroke:var(--tinta);fill:none;stroke-width:2}
+  .tr-f{stroke:var(--tinta);fill:none;stroke-width:1.1}
+  .ct{stroke:var(--cota);stroke-width:1;fill:none}
+  .ct-t{fill:var(--cota);font:500 13px "IBM Plex Mono",monospace}
+  .hach{stroke:var(--grafite);stroke-width:.6;opacity:.55}
+  .vidro{fill:#dfe6ea}
+  @media (prefers-reduced-motion:no-preference){
+    .desenha{stroke-dasharray:var(--l);stroke-dashoffset:var(--l);animation:traco 1.4s cubic-bezier(.5,.1,.2,1) forwards}
+    .d2{animation-delay:.5s}.d3{animation-delay:1.1s;animation-duration:.9s}
+    .surge{opacity:0;animation:surge .5s ease-out 1.7s forwards}
+    @keyframes traco{to{stroke-dashoffset:0}}
+    @keyframes surge{to{opacity:1}}
+  }
+
+  /* secoes */
+  section{padding:80px 0}
+  section.clara{background:var(--folha);border-top:1px solid var(--linha);border-bottom:1px solid var(--linha)}
+  .intro{max-width:36em;margin:14px 0 44px;font-size:18px}
+
+  .faz{display:grid;grid-template-columns:repeat(3,1fr);gap:40px}
+  .faz div{border-top:2px solid var(--tinta);padding-top:18px}
+  .faz p{margin-top:10px}
+
+  .passos{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:40px;counter-reset:p}
+  .passos li{counter-increment:p}
+  .passos li::before{content:counter(p);display:flex;align-items:center;justify-content:center;width:40px;height:40px;border:1.5px solid var(--cota);border-radius:50%;color:var(--cota);font:500 17px "IBM Plex Mono",monospace;margin-bottom:16px}
+  .passos p{margin-top:8px}
+  .teste{margin-top:48px;display:flex;flex-wrap:wrap;align-items:center;gap:20px 32px;padding:26px 28px;background:var(--tinta);color:#dfe2ef;border-radius:6px}
+  .teste strong{color:#fff;font-family:"DM Serif Display",Georgia,serif;font-weight:400;font-size:28px;display:block}
+  .teste .btn{background:var(--folha);color:var(--tinta)}
+  .teste .btn:hover{background:#fff}
+
+  /* planos */
+  .planos{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--linha);border-radius:6px;overflow:hidden;background:var(--folha)}
+  .plano{padding:30px 28px;border-right:1px solid var(--linha)}
+  .plano:last-child{border-right:0}
+  .plano.anual{background:#e4e8ef}
+  .plano .preco{font-family:"DM Serif Display",Georgia,serif;color:var(--tinta);font-size:44px;line-height:1;margin:14px 0 6px}
+  .plano .preco small{font-family:"IBM Plex Sans",sans-serif;font-size:16px;color:var(--grafite)}
+  .plano .det{font-size:15px}
+  .plano .selo{display:inline-block;margin-left:8px;font-size:13px;font-weight:600;color:var(--musgo);background:#dfe8d6;border-radius:20px;padding:2px 10px;vertical-align:2px}
+  .nota{font-size:15px;margin-top:18px}
+
+  /* requisitos + faq */
+  .duas{display:grid;grid-template-columns:.8fr 1.2fr;gap:64px}
+  .req{list-style:none;padding:0;margin:20px 0 0}
+  .req li{padding:12px 0;border-bottom:1px solid var(--linha)}
+  .req li b{color:var(--tinta);font-weight:600}
+  details{border-bottom:1px solid var(--linha)}
+  details:first-of-type{border-top:1px solid var(--linha);margin-top:20px}
+  summary{cursor:pointer;list-style:none;padding:16px 36px 16px 0;position:relative;color:var(--tinta);font-weight:600}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"";position:absolute;right:6px;top:50%;width:10px;height:10px;border-right:2px solid var(--cota);border-bottom:2px solid var(--cota);transform:translateY(-70%) rotate(45deg);transition:transform .2s}
+  details[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
+  details p{padding:0 0 18px}
+
+  /* final */
+  .final{text-align:left}
+  .final .w{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:28px}
+  footer{padding:36px 0 48px;font-size:14px;border-top:1px solid var(--linha)}
+  footer .w{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+
+  .hero .w>*,.duas>*,.faz>*,.passos>*{min-width:0}
+  h1,h2{overflow-wrap:break-word}
+  @media (max-width:900px){
+    .hero .w,.duas{grid-template-columns:minmax(0,1fr);gap:40px}
+    .faz,.passos{grid-template-columns:minmax(0,1fr);gap:28px}
+    .planos{grid-template-columns:minmax(0,1fr)}
+    .w{padding:0 18px}
+    .prancha figcaption{font-size:11px}
+    .plano{border-right:0;border-bottom:1px solid var(--linha)}
+    .plano:last-child{border-bottom:0}
+    header nav{display:none}
+    section{padding:60px 0}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="w">
+    <a class="marca" href="#">Studio 212<span>Esquadrias</span></a>
+    <nav aria-label="Seções">
+      <a href="#o-que-faz">O que faz</a>
+      <a href="#comecar">Como começar</a>
+      <a href="#planos">Planos</a>
+      <a href="#duvidas">Dúvidas</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="w">
+      <div>
+        <h1>O detalhamento de portas e janelas que você fazia em uma tarde, pronto em minutos.</h1>
+        <p class="lead">Plugin para Revit que lê as esquadrias do seu modelo e monta as vistas, as cotas, os quadros e as pranchas, com as fontes e os estilos do seu próprio projeto.</p>
+        <a class="btn" href="https://github.com/studio212dev/studio212-esquadrias/releases/latest/download/Instalador_Studio212_Esquadrias.exe" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>
+          Baixar grátis para Windows
+        </a>
+        <p class="sub-btn">Revit 2025, 2026 e 2027 · 9 MB · teste completo por 24 horas</p>
+      </div>
+
+      <figure class="prancha" aria-label="Exemplo de detalhe de janela gerado pelo plugin: elevação com cotas de largura, altura e peitoril">
+        <svg viewBox="0 0 520 380" role="img" aria-hidden="true">
+          <!-- parede (hachura) -->
+          <g class="hach">
+            <path d="M60 40 V340 M60 40 H110 M60 340 H110"/>
+            <path d="M70 40 L60 50 M80 40 L60 60 M90 40 L60 70 M100 40 L60 80 M110 40 L60 90 M110 50 L60 100 M110 60 L60 110"/>
+          </g>
+          <!-- vão / marco -->
+          <rect class="tr desenha" style="--l:1000" x="140" y="70" width="300" height="200"/>
+          <!-- folhas de correr -->
+          <rect class="tr-f desenha d2" style="--l:620" x="150" y="80" width="150" height="180"/>
+          <rect class="tr-f desenha d2" style="--l:620" x="280" y="80" width="150" height="180"/>
+          <rect class="vidro surge" x="160" y="90" width="130" height="160"/>
+          <rect class="vidro surge" x="290" y="90" width="130" height="160"/>
+          <path class="tr-f surge" d="M215 165 h20 M352 165 h20"/>
+          <!-- peitoril e piso -->
+          <path class="tr desenha d2" style="--l:400" d="M130 270 H450"/>
+          <path class="tr desenha" style="--l:420" d="M110 340 H480"/>
+          <!-- cotas -->
+          <g class="desenha d3" style="--l:900">
+            <path class="ct" d="M140 40 H440 M140 32 V48 M440 32 V48 M136 44 L144 36 M436 44 L444 36"/>
+            <path class="ct" d="M480 70 V270 M472 70 H488 M472 270 H488 M476 74 L484 66 M476 274 L484 266"/>
+            <path class="ct" d="M500 270 V340 M492 270 H508 M492 340 H508 M496 274 L504 266 M496 344 L504 336"/>
+          </g>
+          <g class="surge">
+            <text class="ct-t" x="290" y="30" text-anchor="middle">1,50</text>
+            <text class="ct-t" x="466" y="174" text-anchor="middle" transform="rotate(-90 466 174)">1,20</text>
+            <text class="ct-t" x="486" y="309" text-anchor="middle" transform="rotate(-90 486 309)">1,10</text>
+            <text class="ct-t" x="290" y="366" text-anchor="middle" style="fill:var(--tinta)">J - 01 · JANELA DE CORRER 2 FOLHAS · ALUMÍNIO</text>
+          </g>
+        </svg>
+        <figcaption><span>ELEVAÇÃO · J - 01</span><span>ESC. 1:25</span></figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <section class="clara" id="o-que-faz">
+    <div class="w">
+      <h2>Do modelo para a prancha, sem redesenhar nada</h2>
+      <p class="intro">O plugin trabalha com as portas e janelas que já estão no seu projeto. Nada é inventado: medidas, materiais e funcionamento vêm das famílias que você usou.</p>
+      <div class="faz">
+        <div>
+          <h3>Detalhes de cada esquadria</h3>
+          <p>Planta, elevação e 3D anotado de cada porta e janela, com cotas de vão, peitoril e componentes, na escala que cabe na prancha.</p>
+        </div>
+        <div>
+          <h3>Quadros e tabelas</h3>
+          <p>Quadro de esquadrias por pavimento e o quadro total, com marca, medidas, quantidade, funcionamento e material. Também sai em PNG para memorial e orçamento.</p>
+        </div>
+        <div>
+          <h3>Pranchas diagramadas</h3>
+          <p>As vistas organizadas em folhas A1 a A4 com o seu carimbo. Tudo pode ser desfeito com Ctrl+Z, e as famílias do projeto não são alteradas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="comecar">
+    <div class="w">
+      <h2>Como começar</h2>
+      <p class="intro">Leva uns cinco minutos, do download até o primeiro detalhe.</p>
+      <ol class="passos">
+        <li>
+          <h3>Baixe e instale</h3>
+          <p>Feche o Revit e abra o instalador. Se o Windows mostrar "O Windows protegeu o computador", clique em "Mais informações" e "Executar assim mesmo".</p>
+        </li>
+        <li>
+          <h3>Crie sua conta</h3>
+          <p>No Revit, abra a aba Studio 212 Esquadrias e clique em Portas. Informe nome, e-mail e senha e confirme com o código enviado por e-mail.</p>
+        </li>
+        <li>
+          <h3>Use por 24 horas grátis</h3>
+          <p>Clique em "Testar grátis por 24 horas" e detalhe um projeto seu de verdade. Sem cartão de crédito.</p>
+        </li>
+      </ol>
+      <div class="teste">
+        <div><strong>Teste completo, sem pagar nada</strong>Todas as ferramentas liberadas por 24 horas, uma vez por conta.</div>
+        <a class="btn" href="https://github.com/studio212dev/studio212-esquadrias/releases/latest/download/Instalador_Studio212_Esquadrias.exe" download>Baixar o instalador</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="clara" id="planos">
+    <div class="w">
+      <h2>Planos</h2>
+      <p class="intro">Gostou do teste? Escolha o plano dentro do próprio plugin e pague com Pix ou cartão. A liberação é automática, em segundos.</p>
+      <div class="planos">
+        <div class="plano">
+          <h3>Mensal</h3>
+          <p class="preco">R$ 14,99</p>
+          <p class="det">30 dias de uso</p>
+        </div>
+        <div class="plano">
+          <h3>Semestral</h3>
+          <p class="preco">R$ 74,90</p>
+          <p class="det">180 dias · sai por R$ 12,48 por mês</p>
+        </div>
+        <div class="plano anual">
+          <h3>Anual <span class="selo">28% de desconto</span></h3>
+          <p class="preco">R$ 129,90</p>
+          <p class="det">365 dias · sai por R$ 10,83 por mês</p>
+        </div>
+      </div>
+      <p class="nota">Cada conta funciona em até 2 computadores. Sem renovação automática: quando o plano termina, você decide se quer continuar.</p>
+    </div>
+  </section>
+
+  <section id="duvidas">
+    <div class="w duas">
+      <div>
+        <h2>Requisitos</h2>
+        <ul class="req">
+          <li><b>Revit</b> 2025, 2026 ou 2027</li>
+          <li><b>Windows</b> 10 ou 11</li>
+          <li><b>Internet</b> para entrar na conta. Depois funciona até 7 dias offline.</li>
+        </ul>
+      </div>
+      <div>
+        <h2>Dúvidas</h2>
+        <details>
+          <summary>O plugin mexe no meu projeto?</summary>
+          <p>Ele cria vistas, tabelas e folhas, mas não altera as portas, as janelas nem as famílias do projeto. Tudo o que ele faz pode ser desfeito com Ctrl+Z, e o botão "Apagar para refazer" remove o detalhamento inteiro.</p>
+        </details>
+        <details>
+          <summary>Por que o Windows mostra um aviso ao instalar?</summary>
+          <p>O aviso aparece com programas novos que ainda não têm assinatura digital. Clique em "Mais informações" e depois em "Executar assim mesmo". O instalador só coloca o plugin na pasta de complementos do Revit.</p>
+        </details>
+        <details>
+          <summary>Funciona com as famílias do meu escritório?</summary>
+          <p>Sim. O plugin lê os parâmetros das famílias que já estão no modelo e usa as fontes e os estilos de texto do seu arquivo, para o detalhamento ficar com a cara do seu projeto.</p>
+        </details>
+        <details>
+          <summary>O que acontece quando o plano termina?</summary>
+          <p>As ferramentas deixam de abrir até você renovar. O detalhamento que já foi feito continua no arquivo, porque são vistas e folhas normais do Revit.</p>
+        </details>
+        <details>
+          <summary>Meus projetos são enviados para algum lugar?</summary>
+          <p>Não. O plugin trabalha só dentro do seu Revit. Guardamos apenas nome, e-mail e dados do plano. O pagamento é feito no Mercado Pago, e não temos acesso a dados de cartão.</p>
+        </details>
+        <details>
+          <summary>Posso pedir reembolso?</summary>
+          <p>Sim, dentro de 7 dias após a primeira compra. Fale com a gente pelo e-mail ou pelo Instagram.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="clara final">
+    <div class="w">
+      <h2>Teste no seu próximo projeto</h2>
+      <a class="btn" href="https://github.com/studio212dev/studio212-esquadrias/releases/latest/download/Instalador_Studio212_Esquadrias.exe" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>
+        Baixar grátis para Windows
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="w">
+    <span>Studio 212 Arquitetura · Garopaba, SC</span>
+    <span><a href="mailto:studio212_arquitetura@outlook.com">studio212_arquitetura@outlook.com</a> · <a href="https://www.instagram.com/arq.studio_212/">@arq.studio_212</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
