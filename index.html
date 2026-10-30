@@ -130,9 +130,29 @@
     header nav{display:none}
     section{padding:60px 0}
   }
+
+  /* celular: o plugin instala no computador */
+  .so-celular{display:none}
+  body.celular .so-celular{display:block}
+  body.celular .so-pc{display:none}
+  .aviso-cel{background:var(--tinta);color:#e6e8f2;font-size:15px;line-height:1.45;padding:12px 0}
+  .aviso-cel b{color:#fff}
+  .folha-cel{position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;justify-content:center;background:rgba(20,24,45,.55)}
+  .folha-cel.aberta{display:flex}
+  .folha-cel .caixa{background:var(--folha);width:100%;max-width:520px;border-radius:14px 14px 0 0;padding:24px 20px 28px;box-shadow:0 -8px 30px rgba(0,0,0,.2)}
+  .folha-cel h3{font-family:"DM Serif Display",Georgia,serif;font-weight:400;font-size:26px;line-height:1.15}
+  .folha-cel p{font-size:16px;margin:10px 0 18px}
+  .folha-cel .op{display:flex;align-items:center;gap:12px;width:100%;justify-content:center;font:600 17px "IBM Plex Sans",sans-serif;padding:15px 18px;border-radius:8px;border:0;cursor:pointer;text-decoration:none;margin-top:10px}
+  .op-zap{background:#1f9e55;color:#fff}
+  .op-mail{background:var(--tinta);color:#fff}
+  .op-copiar{background:#fff;color:var(--tinta);border:1.5px solid var(--tinta)!important}
+  .folha-cel .link-visivel{font:500 13px "IBM Plex Mono",monospace;background:#fff;border:1px dashed var(--linha);border-radius:6px;padding:10px;word-break:break-all;color:var(--tinta);margin-top:14px;user-select:all;-webkit-user-select:all}
+  .folha-cel .fechar{display:block;margin:16px auto 0;background:none;border:0;color:var(--grafite);font-size:15px;text-decoration:underline;cursor:pointer}
+  .folha-cel .mesmo{display:block;text-align:center;font-size:13px;margin-top:8px;color:var(--grafite)}
 </style>
 </head>
 <body>
+<div class="aviso-cel so-celular" role="note"><div class="w">📱 <b>Você está no celular.</b> O plugin instala no <b>computador com Revit 2024 a 2027</b> (Windows). Toque em um botão de download para mandar o link pra você.</div></div>
 
 <header>
   <div class="w">
@@ -152,11 +172,12 @@
       <div>
         <h1>O detalhamento de portas e janelas que você fazia em uma tarde, pronto em minutos.</h1>
         <p class="lead">Plugin para Revit que lê as esquadrias do seu modelo e monta as vistas, as cotas, os quadros e as pranchas, com as fontes e os estilos do seu próprio projeto.</p>
-        <a class="btn" href="https://github.com/studio212dev/studio212-esquadrias/releases/latest/download/Instalador_Studio212_Esquadrias.exe" download>
+        <a class="btn dl" href="https://github.com/studio212dev/studio212-esquadrias/releases/latest/download/Instalador_Studio212_Esquadrias.exe" download>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>
           Baixar grátis para Windows
         </a>
         <p class="sub-btn">Revit 2024, 2025, 2026 e 2027 · 14 MB · teste completo por 24 horas</p>
+        <p class="sub-btn so-celular">No celular? Toque no botão e mande o link pro seu WhatsApp ou e-mail para abrir no computador.</p>
       </div>
 
       <figure class="prancha" aria-label="Exemplo de detalhe de janela gerado pelo plugin: elevação com cotas de largura, altura e peitoril">
@@ -236,7 +257,7 @@
       </ol>
       <div class="teste">
         <div><strong>Teste completo, sem pagar nada</strong>Todas as ferramentas liberadas por 24 horas, uma vez por conta.</div>
-        <a class="btn" href="https://github.com/studio212dev/studio212-esquadrias/releases/latest/download/Instalador_Studio212_Esquadrias.exe" download>Baixar o instalador</a>
+        <a class="btn dl" href="https://github.com/studio212dev/studio212-esquadrias/releases/latest/download/Instalador_Studio212_Esquadrias.exe" download>Baixar o instalador</a>
       </div>
     </div>
   </section>
@@ -309,7 +330,7 @@
   <section class="clara final">
     <div class="w">
       <h2>Teste no seu próximo projeto</h2>
-      <a class="btn" href="https://github.com/studio212dev/studio212-esquadrias/releases/latest/download/Instalador_Studio212_Esquadrias.exe" download>
+      <a class="btn dl" href="https://github.com/studio212dev/studio212-esquadrias/releases/latest/download/Instalador_Studio212_Esquadrias.exe" download>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>
         Baixar grátis para Windows
       </a>
@@ -324,5 +345,52 @@
   </div>
 </footer>
 
+<div class="folha-cel" id="folhaCel" role="dialog" aria-modal="true" aria-labelledby="folhaTit">
+  <div class="caixa">
+    <h3 id="folhaTit">Abra no computador com Revit</h3>
+    <p>O Studio 212 Esquadrias instala no <b>Windows com Revit 2024 a 2027</b>, não no celular. Mande o link pra você e abra no computador:</p>
+    <a class="op op-zap" id="opZap" href="#" target="_blank" rel="noopener">Enviar pro meu WhatsApp</a>
+    <a class="op op-mail" id="opMail" href="#">Enviar pro meu e-mail</a>
+    <button class="op op-copiar" id="opCopiar" type="button">Copiar link</button>
+    <div class="link-visivel" id="linkVisivel"></div>
+    <button class="fechar" id="opFechar" type="button">Fechar</button>
+    <a class="mesmo" id="opMesmo" href="#" download>Baixar o instalador mesmo assim</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  var ua = navigator.userAgent || "";
+  var celular = /Android|iPhone|iPad|iPod|Mobile|Instagram|FBAN|FBAV/i.test(ua) ||
+                (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua));
+  if (!celular) return;
+  document.body.classList.add("celular");
+  var site = "https://studio212dev.github.io/studio212-esquadrias/";
+  var exe = "https://github.com/studio212dev/studio212-esquadrias/releases/latest/download/Instalador_Studio212_Esquadrias.exe";
+  var texto = "Studio 212 Esquadrias - plugin para Revit (teste grátis 24 h). Abrir no computador com Revit 2024 a 2027: " + site;
+  var f = document.getElementById("folhaCel");
+  document.getElementById("opZap").href = "https://wa.me/?text=" + encodeURIComponent(texto);
+  document.getElementById("opMail").href = "mailto:?subject=" + encodeURIComponent("Plugin Studio 212 Esquadrias (abrir no computador)") + "&body=" + encodeURIComponent(texto);
+  document.getElementById("linkVisivel").textContent = site;
+  document.getElementById("opMesmo").href = exe;
+  document.querySelectorAll("a.dl").forEach(function(a){
+    a.addEventListener("click", function(e){ e.preventDefault(); f.classList.add("aberta"); });
+    a.lastChild.textContent = " Enviar o link pro computador";
+  });
+  document.getElementById("opFechar").onclick = function(){ f.classList.remove("aberta"); };
+  f.addEventListener("click", function(e){ if (e.target === f) f.classList.remove("aberta"); });
+  var bc = document.getElementById("opCopiar");
+  bc.onclick = function(){
+    function ok(){ bc.textContent = "Link copiado ✓"; setTimeout(function(){ bc.textContent = "Copiar link"; }, 2500); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(site).then(ok, velho);
+    } else { velho(); }
+    function velho(){
+      var t = document.createElement("textarea"); t.value = site; document.body.appendChild(t);
+      t.select(); try { document.execCommand("copy"); ok(); } catch(x) {} document.body.removeChild(t);
+    }
+  };
+})();
+</script>
 </body>
 </html>
