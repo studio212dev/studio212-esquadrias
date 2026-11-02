@@ -17,16 +17,23 @@
     try { fetch(ENDP, { method: 'POST', keepalive: true, headers: { apikey: KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify(o) }).catch(function () {}); } catch (e) {}
   }
   manda('visita', { origem: (origem || '').slice(0, 200) });
-  // cliques: botoes de baixar (topo/meio/fim), menu, links de fora
   var baixar = [].slice.call(document.querySelectorAll('a[href*="/releases/"]'));
   var lugares = ['topo', 'meio', 'fim'];
+  // cliques: botoes de baixar (topo/meio/fim), menu, links de fora; e o ponto do clique (mapa de calor)
   document.addEventListener('click', function (e) {
-    var a = e.target.closest && e.target.closest('a,button'); if (!a) return;
+    var a = e.target.closest && e.target.closest('a,button');
     var alvo;
-    var i = baixar.indexOf(a);
-    if (i >= 0) alvo = 'baixar (' + (lugares[i] || (i + 1)) + ')';
-    else alvo = (a.getAttribute('data-rastro') || (a.textContent || '').trim().replace(/\s+/g, ' ') || a.getAttribute('href') || '?');
-    manda('clique', { alvo: alvo.slice(0, 160) });
+    if (!a) alvo = '(fora de botão ou link)';
+    else {
+      var i = baixar.indexOf(a);
+      if (i >= 0) alvo = 'baixar (' + (lugares[i] || (i + 1)) + ')';
+      else alvo = (a.getAttribute('data-rastro') || (a.textContent || '').trim().replace(/\s+/g, ' ') || a.getAttribute('href') || '?');
+    }
+    var d = document.documentElement, larg = d.clientWidth || innerWidth, alt = Math.max(d.scrollHeight, document.body ? document.body.scrollHeight : 0);
+    var ponto = (typeof e.pageX === 'number' && larg >= 100 && alt >= 100 && (e.pageX || e.pageY)) ?
+      { x: Math.max(0, Math.round(e.pageX)), y: Math.max(0, Math.round(e.pageY)), larg: Math.round(larg), alt: Math.round(alt) } : {};
+    ponto.alvo = alvo.slice(0, 160);
+    manda('clique', ponto);
   }, true);
   addEventListener('scroll', function () {
     var h = document.documentElement, t = (h.scrollTop + innerHeight) / Math.max(1, h.scrollHeight);
